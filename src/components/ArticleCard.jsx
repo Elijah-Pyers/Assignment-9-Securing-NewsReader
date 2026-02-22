@@ -1,10 +1,21 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useArticles } from '../context/ArticlesContext';
+import { useAuth } from '../context/AuthContext';
 
 function ArticleCard({ article }) {
   const { saveArticle, removeArticle, isArticleSaved } = useArticles();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const saved = isArticleSaved(article.url);
 
   const handleBookmarkClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+
     if (saved) {
       removeArticle(article.url);
     } else {
@@ -21,20 +32,25 @@ function ArticleCard({ article }) {
           </a>
         </h3>
         <button
-          onClick={handleBookmarkClick}
           className={`bookmark-btn ${saved ? 'saved' : ''}`}
-          aria-label={saved ? 'Remove bookmark' : 'Add bookmark'}
+          onClick={handleBookmarkClick}
+          aria-label={saved ? 'Remove from saved' : 'Save article'}
+          title={!isAuthenticated ? 'Login to save articles' : (saved ? 'Unsave' : 'Save')}
         >
-          {saved ? '🔖' : '📑'}
+          {saved ? '★' : '☆'}
         </button>
       </div>
-      <p className="article-abstract">{article.abstract}</p>
+
+      {article.abstract && <p className="article-abstract">{article.abstract}</p>}
+
       <div className="article-meta">
-        <span>{article.section}</span>
-        <span>{new Date(article.published_date).toLocaleDateString()}</span>
+        <span className="article-section">{article.section}</span>
+        <span className="article-date">
+          {article.published_date ? new Date(article.published_date).toLocaleDateString() : ''}
+        </span>
       </div>
     </div>
   );
-};
+}
 
 export default ArticleCard;

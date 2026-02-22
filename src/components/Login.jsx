@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
@@ -8,27 +8,28 @@ function Login() {
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('regular');
   const [error, setError] = useState('');
+
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  // If user got redirected here from ProtectedRoute, send them back after login
+  const from = location.state?.from || '/';
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    // Basic validation
     if (!username.trim() || !password.trim()) {
       setError('Please enter both username and password');
       return;
     }
 
-    // Mock authentication - accepts any username/password
-    // In a real app, this would validate against a backend
     try {
-      login(username, password, selectedRole);
-      // Redirect to saved articles after successful login
-      navigate('/saved');
+      login(username.trim(), password.trim(), selectedRole);
+      navigate(from, { replace: true });
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
     }
   };
 
@@ -36,7 +37,7 @@ function Login() {
     <div className="login-container">
       <div className="login-card">
         <h2>Login to NewsReader</h2>
-        <p className="login-subtitle">Access your personalized news experience</p>
+        <p className="login-subtitle">Demo login (any username/password)</p>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -71,7 +72,7 @@ function Login() {
               onChange={(e) => setSelectedRole(e.target.value)}
             >
               <option value="regular">Regular User</option>
-              <option value="premium">Premium User</option>
+              <option value="admin">Admin User</option>
             </select>
           </div>
 
@@ -81,13 +82,13 @@ function Login() {
         </form>
 
         <div className="demo-accounts">
-          <p className="demo-title">Demo Accounts (for testing):</p>
-          <p>Any username/password combination will work</p>
-          <p>Select "Regular" or "Premium" to test different access levels</p>
+          <p className="demo-title">Testing tips:</p>
+          <p>Log in as regular → save articles → view /saved</p>
+          <p>Log in as admin → view everyone’s saved articles in /admin</p>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default Login;
